@@ -15,6 +15,7 @@ defmodule Pento.DataCase do
   """
 
   use ExUnit.CaseTemplate
+  alias Ecto.Adapters.SQL.Sandbox
 
   using do
     quote do
@@ -28,10 +29,10 @@ defmodule Pento.DataCase do
   end
 
   setup tags do
-    :ok = Ecto.Adapters.SQL.Sandbox.checkout(Pento.Repo)
+    :ok = Sandbox.checkout(Pento.Repo)
 
     unless tags[:async] do
-      Ecto.Adapters.SQL.Sandbox.mode(Pento.Repo, {:shared, self()})
+      Sandbox.mode(Pento.Repo, {:shared, self()})
     end
 
     :ok

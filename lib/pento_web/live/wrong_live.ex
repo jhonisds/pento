@@ -1,18 +1,23 @@
 defmodule PentoWeb.WrongLive do
+  @moduledoc """
+  Module wrong live
+  """
   use PentoWeb, :live_view
 
-  def mount(_params, _session, socket) do
+  alias Pento.Accounts
+
+  def mount(_params, session, socket) do
     if connected?(socket) do
       :timer.send_interval(1000, self(), :tick)
     end
 
-    socket = assign_state(socket)
+    socket = assign_state(socket, session)
     {:ok, socket}
   end
 
   def render(assigns) do
     ~L"""
-    <h2> It's: <%= @time %> </h2>
+
     <h1> Your Score: <%= @score %> </h1>
     <h2>
       <%= @message %>
@@ -25,18 +30,22 @@ defmodule PentoWeb.WrongLive do
       </a>
     <% end %>
     </h2>
+    <pre>
+      <%= @time %>
+      <%= @user.email %>
+      <%= @session_id %>
+    </pre>
     """
   end
 
-  def time() do
+  def time do
     DateTime.utc_now()
     |> Calendar.strftime("%c", preferred_datetime: "%H:%M:%S - %B %-d, %Y")
   end
 
-  def random_number(), do: Enum.random(1..10) |> to_string()
+  def random_number, do: Enum.random(1..10) |> to_string()
 
-  def handle_event("guess", %{"number" => guess} = data, socket) do
-    IO.inspect(data)
+  def handle_event("guess", %{"number" => guess}, socket) do
     check_guess(guess, socket)
   end
 
@@ -45,13 +54,15 @@ defmodule PentoWeb.WrongLive do
     {:noreply, socket}
   end
 
-  defp assign_state(socket) do
+  defp assign_state(socket, session) do
     socket
     |> assign(
       score: 0,
       message: "Guess a number",
       time: time(),
-      number: random_number()
+      number: random_number(),
+      user: Accounts.get_user_by_session_token(session["user_token"]),
+      session_id: session["live_socket_id"]
     )
   end
 

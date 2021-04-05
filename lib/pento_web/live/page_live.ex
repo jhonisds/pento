@@ -1,4 +1,7 @@
 defmodule PentoWeb.PageLive do
+  @moduledoc """
+  Module PageLive.
+  """
   use PentoWeb, :live_view
 
   @impl true
