@@ -21,6 +21,14 @@ defmodule PentoWeb.Router do
     pipe_through :browser
 
     live "/", PageLive, :index
+
+    # Generated product routes start here:
+    live "/products", ProductLive.Index, :index
+    live "/products/new", ProductLive.Index, :new
+    live "/products/:id/edit", ProductLive.Index, :edit
+
+    live "/products/:id", ProductLive.Show, :show
+    live "/products/:id/show/edit", ProductLive.Show, :edit
   end
 
   # Other scopes may use custom stacks.
