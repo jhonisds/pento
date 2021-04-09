@@ -1,4 +1,5 @@
 defmodule Pento.Catalog.Product do
+  @moduledoc false
   use Ecto.Schema
   import Ecto.Changeset
 
@@ -6,7 +7,7 @@ defmodule Pento.Catalog.Product do
     field :description, :string
     field :name, :string
     field :sku, :integer
-    field :unique_price, :float
+    field :unit_price, :float
 
     timestamps()
   end
@@ -14,9 +15,9 @@ defmodule Pento.Catalog.Product do
   @doc false
   def changeset(product, attrs) do
     product
-    |> cast(attrs, [:name, :description, :unique_price, :sku])
-    |> validate_required([:name, :description, :unique_price, :sku])
+    |> cast(attrs, [:name, :description, :unit_price, :sku])
+    |> validate_required([:name, :description, :unit_price, :sku])
     |> unique_constraint(:sku)
-    |> validate_number(:unique_price, greater_than: 0.0)
+    |> validate_number(:unit_price, greater_than: 0.0)
   end
 end

@@ -5,7 +5,7 @@ defmodule Pento.Repo.Migrations.CreateProducts do
     create table(:products) do
       add :name, :string
       add :description, :string
-      add :unique_price, :float
+      add :unit_price, :float
       add :sku, :integer
 
       timestamps()

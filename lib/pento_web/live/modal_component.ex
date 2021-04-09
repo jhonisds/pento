@@ -1,4 +1,5 @@
 defmodule PentoWeb.ModalComponent do
+  @moduledoc false
   use PentoWeb, :live_component
 
   @impl true

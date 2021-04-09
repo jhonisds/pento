@@ -1,4 +1,5 @@
 defmodule PentoWeb.ProductLive.Index do
+  @moduledoc false
   use PentoWeb, :live_view
 
   alias Pento.Catalog

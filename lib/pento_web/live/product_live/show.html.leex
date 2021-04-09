@@ -1,7 +1,7 @@
 <h1>Show Product</h1>
 
 <%= if @live_action in [:edit] do %>
-  <%= live_modal @socket, PentoWeb.ProductLive.FormComponent,
+<%= live_modal @socket, PentoWeb.ProductLive.FormComponent,
     id: @product.id,
     title: @page_title,
     action: @live_action,
@@ -22,8 +22,8 @@
   </li>
 
   <li>
-    <strong>Unique price:</strong>
-    <%= @product.unique_price %>
+    <strong>Unit price:</strong>
+    <%= @product.unit_price %>
   </li>
 
   <li>
