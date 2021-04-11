@@ -1,114 +1,36 @@
 # Elixir CircleCI 2.0 configuration file
+# https://onboarding.circleci.com/project-setup/github/thiagogsr/voting
 #
 # Check https://circleci.com/docs/2.0/language-elixir/ for more details
 version: 2
-
-defaults: &defaults
-  working_directory: ~/pento
-  docker:
-    - image: cimg/elixir:1.11.4
-      environment:
-        MIX_ENV: test
-
 jobs:
   build:
-    <<: *defaults
+    docker:
+      # specify the version here
+      - image: cimg/elixir:1.11.4
+        environment:
+          MIX_ENV: test
+      - image: circleci/postgres:11.5-alpine
+
+    working_directory: ~/repo
     steps:
       - checkout
+      - run: mix local.hex --force # install Hex locally (without prompt)
+      - run: mix local.rebar --force # fetch a copy of rebar (without prompt)
       - restore_cache:
-          keys:
-            - v1-build-cache-{{ checksum "mix.lock" }}
-            - v1-build-cache-{{ .Branch }}
-            - v1-build-cache
-      - run: mix local.hex --force
-      - run: mix local.rebar --force
-      - run: mix deps.get
-      - run: mix compile --all-warnings --warnings-as-errors
+          key: deps-cache-{{ checksum "mix.lock" }}
+      - run: mix do deps.get, deps.compile
       - save_cache:
-          key: v1-build-cache-{{ checksum "mix.lock" }}
+          key: deps-cache-{{ checksum "mix.lock" }}
           paths:
-            - _build
             - deps
             - ~/.mix
-      - save_cache:
-          key: v1-build-cache-{{ .Branch }}
-          paths:
             - _build
-            - deps
-            - ~/.mix
-      - persist_to_workspace:
-          root: ~/
-          paths:
-            - pento
-            - .mix
-
-  test:
-    working_directory: ~/pento
-    environment:
-      MIX_ENV: test
-    docker:
-      - image: cimg/elixir:1.11.4
-      - image: circleci/postgres:11.5-alpine
-    parallelism: 1
-    steps:
-      - attach_workspace:
-          at: ~/
-      - run:
-          name: Wait for Postgres to start
+      - run: mix compile --warnings-as-errors
+      - run: # special utility that stalls main process until DB is ready
+          name: Wait for DB
           command: dockerize -wait tcp://localhost:5432 -timeout 1m
-      - run: mix citest
-
-  credo:
-    <<: *defaults
-    steps:
-      - attach_workspace:
-          at: ~/
-      - run:
-          name: credo
-          command: mix credo --strict --ignore Credo.Check.Readability.MaxLineLength, Credo.Check.Consistency.SpaceAroundOperators
-
-  format:
-    <<: *defaults
-    steps:
-      - attach_workspace:
-          at: ~/
-      - run:
-          name: format
-          command: mix format --check-formatted
-
-  dialyzer:
-    <<: *defaults
-    steps:
-      - attach_workspace:
-          at: ~/
-      - restore_cache:
-          keys:
-            - v1-plt-cache-{{ checksum "mix.lock" }}
-            - v1-plt-cache-{{ .Branch }}
-            - v1-plt-cache
-      - run: mix dialyzer --format short
-      - save_cache:
-          key: v1-plt-cache-{{ checksum "mix.lock" }}
-          paths:
-            - "dialyzer.plt"
-            - "dialyzer.plt.hash"
-      - save_cache:
-          key: v1-plt-cache-{{ .Branch }}
-          paths:
-            - "dialyzer.plt"
-            - "dialyzer.plt.hash"
-
-workflows:
-  version: 2
-  ci:
-    jobs:
-      - build
-      - test:
-          requires:
-            - build
-      - credo:
-          requires:
-            - build
-      - format:
-          requires:
-            - build
+      - run: mix do ecto.create, ecto.migrate
+      - run: mix test
+      - run: mix format --check-formatted
+      - run: mix credo --strict
